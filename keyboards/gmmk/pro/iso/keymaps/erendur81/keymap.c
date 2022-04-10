@@ -19,7 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "rgb_matrix_map.h"
 
 enum my_keycodes {
-  GUI_TOGG = SAFE_RANGE
+  KC_GMTOGG = SAFE_RANGE, // game mode toggle
+  KC_LSFTCAPS             // left shift in game mode instead of caps lock
 };
 
 // clang-format off
@@ -48,7 +49,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_ESC,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  KC_PSCR,          KC_MUTE,
         KC_GRV,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC,          KC_DEL,
         KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC,                   KC_PGUP,
-        KC_CAPS, KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT, KC_NUHS, KC_ENT,           KC_PGDN,
+        KC_LSFTCAPS, KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT, KC_NUHS, KC_ENT,           KC_PGDN,
         KC_LSFT, KC_NUBS, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,          KC_RSFT, KC_UP,   KC_END,
         KC_LCTL, KC_LGUI, KC_LALT,                            KC_SPC,                             KC_RALT, MO(1),   KC_RCTL, KC_LEFT, KC_DOWN, KC_RGHT
     ),
@@ -57,9 +58,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_SLEP, KC_MYCM, KC_WHOM, KC_CALC, KC_MSEL, KC_MPRV, KC_MNXT, KC_MPLY, KC_MSTP, KC_MUTE, KC_VOLD, KC_VOLU, _______, _______,          _______,
         _______, RGB_TOG, RGB_M_P, RGB_M_B, RGB_M_R, RGB_M_SW, _______, _______, _______, _______, _______, _______, _______, RESET,            KC_INS,
         _______, _______, RGB_VAI, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,                   _______,
-        _______, _______, RGB_VAD, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______,
-        _______, _______, RGB_HUD, RGB_HUI, _______, _______, _______, _______, _______, _______, _______, _______,          _______, RGB_MOD, KC_HOME,
-        _______, GUI_TOGG, _______,                            _______,                            _______, _______, _______, RGB_SPD, RGB_RMOD, RGB_SPI
+        _______, RGB_HUD, RGB_VAD, RGB_HUI, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,          _______, RGB_MOD, KC_HOME,
+        _______, KC_GMTOGG, _______,                            _______,                            _______, _______, _______, RGB_SPD, RGB_RMOD, RGB_SPI
     ),
 
 
@@ -85,55 +86,114 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #ifdef RGB_MATRIX_ENABLE
   void rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) 
   {
-      if (keymap_config.no_gui) 
-      {
-        rgb_matrix_set_color(LED_LWIN, RGB_RED);  // Light up Win key when disabled
-      }
-
-      if (IS_HOST_LED_ON(USB_LED_CAPS_LOCK)) 
-      {
-        rgb_matrix_set_color(LED_CAPS, RGB_RED); // Light up CAPS key when enabled
-
-        // light up left side
-        rgb_matrix_set_color(LED_L1, RGB_RED);
-        rgb_matrix_set_color(LED_L2, RGB_RED);
-        rgb_matrix_set_color(LED_L3, RGB_RED);
-        rgb_matrix_set_color(LED_L4, RGB_RED);
-        rgb_matrix_set_color(LED_L5, RGB_RED);
-        rgb_matrix_set_color(LED_L6, RGB_RED);
-        rgb_matrix_set_color(LED_L7, RGB_RED);
-        rgb_matrix_set_color(LED_L8, RGB_RED);
-
-        // lieght up right side
-        rgb_matrix_set_color(LED_R1, RGB_RED);
-        rgb_matrix_set_color(LED_R2, RGB_RED);
-        rgb_matrix_set_color(LED_R3, RGB_RED);
-        rgb_matrix_set_color(LED_R4, RGB_RED);
-        rgb_matrix_set_color(LED_R5, RGB_RED);
-        rgb_matrix_set_color(LED_R6, RGB_RED);
-        rgb_matrix_set_color(LED_R7, RGB_RED);
-        rgb_matrix_set_color(LED_R8, RGB_RED);
-      }
-  }
-
-  bool process_record_user(uint16_t keycode, keyrecord_t *record) 
-  {
-    switch (keycode) 
+    // Game mode enabled
+    if (keymap_config.no_gui) 
     {
-      case GUI_TOGG:
-        if (record->event.pressed) 
+      rgb_matrix_set_color(LED_LWIN, RGB_RED);  // light up left windows key
+
+      // light up side leds
+      for (uint8_t i = 0; i < sizeof(LED_SIDE_LEFT) / sizeof(LED_SIDE_LEFT[0]); i++) 
+      {
+        rgb_matrix_set_color(LED_SIDE_LEFT[i], RGB_RED);
+        rgb_matrix_set_color(LED_SIDE_RIGHT[i], RGB_RED);
+      }
+    }
+
+    // Caps lock enabled
+    static uint32_t cycle_led_timer = 0;
+    static bool cycle_led_active = false;
+
+    if (host_keyboard_led_state().caps_lock)
+    {
+      if (timer_elapsed32(cycle_led_timer) > 500)
+      {
+          cycle_led_active = !cycle_led_active;
+          cycle_led_timer = timer_read32();
+      }
+
+      if (cycle_led_active)
+      {
+        rgb_matrix_set_color(LED_CAPS, RGB_RED);
+      }
+      else
+      {
+        rgb_matrix_set_color(LED_CAPS, RGB_OFF);
+      }
+
+      for (uint8_t i = 0; i < sizeof(LED_SIDE_LEFT) / sizeof(LED_SIDE_LEFT[0]); i++) 
+      {
+        if (cycle_led_active)
         {
-          keymap_config.no_gui = !keymap_config.no_gui; // Toggle gui on/off mode
-        } 
-        else 
-        {
-          unregister_code16(keycode);
+          rgb_matrix_set_color(LED_SIDE_LEFT[i], RGB_RED);
+          rgb_matrix_set_color(LED_SIDE_RIGHT[i], RGB_RED);
         }
-
-        return false; // Skip all further processing of this key
-
-      default:
-        return true; // Process all other keycodes normally
+        else
+        {
+          rgb_matrix_set_color(LED_SIDE_LEFT[i], RGB_OFF);
+          rgb_matrix_set_color(LED_SIDE_RIGHT[i], RGB_OFF);
+        }
+      }
     }
   }
 #endif
+
+// if windows key is disabled (game mode) shift otherwise normal caps lock
+void kc_LSFTCAP_register(void) {
+    if (keymap_config.no_gui && !host_keyboard_led_state().caps_lock) {
+        register_code16(KC_LSFT);
+    } else {
+        register_code(KC_CAPS);
+    }
+}
+
+void kc_LSFTCAP_unregister(void) {
+    if (keymap_config.no_gui) {
+        unregister_code16(KC_LSFT);
+    } else {
+        unregister_code(KC_CAPS);
+    }
+}
+
+// toggle game mode. Deactivate caps lock if activated
+void kc_GMTOGG_register(void) {
+  keymap_config.no_gui = !keymap_config.no_gui; // toggle game mode
+  if (host_keyboard_led_state().caps_lock) register_code(KC_CAPS);
+}
+
+void kc_GMTOGG_unregister(void) {
+  unregister_code16(KC_GMTOGG);
+  if (host_keyboard_led_state().caps_lock) unregister_code(KC_CAPS);
+}
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) 
+{
+  switch (keycode) 
+  {
+    case KC_GMTOGG:
+      if (record->event.pressed) 
+      {
+        kc_GMTOGG_register();
+      } 
+      else 
+      {
+        kc_GMTOGG_unregister();
+      }
+
+      return false; // skip all further processing of this key
+
+    case KC_LSFTCAPS:
+      if (record->event.pressed) 
+      {
+        kc_LSFTCAP_register();
+      } 
+      else 
+      {
+        kc_LSFTCAP_unregister();
+      }
+
+      return false; // skip all further processing of this key
+
+    default:
+      return true; // process all other keycodes normally
+  }
+}
