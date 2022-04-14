@@ -21,3 +21,5 @@
     #define RGB_DISABLE_WHEN_USB_SUSPENDED
     #define RGBLIGHT_SLEEP
 #endif
+
+#define USB_POLLING_INTERVAL_MS 1
